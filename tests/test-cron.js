@@ -306,6 +306,71 @@ module.exports = testCase({
 		job.stop();
 		assert.done();
 	},
+	'test a job with a string and a given utc offset': function (assert) {
+		var clock = sinon.useFakeTimers();
+
+		assert.expect(2);
+
+		var moment = require("moment-timezone");
+		var offset = "-09:00";
+
+		// New Orleans offset
+		var t = moment();
+		t.utcOffset(offset);
+
+		// Current offset
+		d = moment();
+
+		// If current offset is New Orleans offset, switch to Los Angeles..
+		if (t.hours() === d.hours()) {
+			offset = "-08:00";
+			t.utcOffset(offset);
+		}
+		assert.notEqual(d.hours(), t.hours());
+
+		t.add(1, 's');
+
+		var job = new cron.CronJob(t.seconds() + ' ' + t.minutes() + ' ' + t.hours() +  ' * * *', function(){
+			assert.ok(true);
+		}, null, true, null, null, offset);
+
+		clock.tick(1000);
+		clock.restore();
+		job.stop();
+		assert.done();
+	},
+	'test a job with a date and a given utc offset': function (assert) {
+		assert.expect(2);
+
+		var moment = require("moment-timezone");
+		var offset = "-09:00";
+
+		// New Orleans offset
+		var t = moment();
+		t.utcOffset(offset);
+
+		// Current offset
+		d = moment();
+
+		// If current offset is New Orleans offset, switch to Los Angeles..
+		if (t.hours() === d.hours()) {
+			offset = "-08:00";
+			t.utcOffset(offset);
+		}
+		assert.notEqual(d.hours(), t.hours());
+
+		d.add(1, 's');
+		var clock = sinon.useFakeTimers(d._d.getTime());
+
+		var job = new cron.CronJob(d._d, function() {
+			assert.ok(true);
+		}, null, true, null, null, offset);
+
+		clock.tick(1000);
+		clock.restore();
+		job.stop();
+		assert.done();
+	},
 	'test long wait should not fire immediately': function(assert) {
 		var clock = sinon.useFakeTimers();
 
